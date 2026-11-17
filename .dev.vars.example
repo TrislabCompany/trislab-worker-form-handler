@@ -1,0 +1,6 @@
+# Copy to .dev.vars for `pnpm dev` (docs/getting-started.md). Never commit .dev.vars.
+# Turnstile's test secret: every token passes. 2x0000000000000000000000000000000AA always fails.
+TURNSTILE_SECRET_ASTRAGROUP_WEBSITE_FASADANAKLJUC=1x0000000000000000000000000000000AA
+TURNSTILE_SECRET_ASTRAGROUP_WEBSITE_STREHANAKLJUC=1x0000000000000000000000000000000AA
+# Locally the mail account is log-only: the mail is printed, not sent.
+RECIPIENTS={"fasadanakljuc-povprasevanje":["test@example.com"],"strehanakljuc-povprasevanje":["test@example.com"]}
