@@ -1,0 +1,111 @@
+# The form handler Worker (docs/architecture.md). The top level is the local
+# setup for `pnpm dev`; [env.dev], [env.staging] and [env.production] are the
+# deployed Workers, deployed only by the workflows (docs/deployment.md).
+#
+# Vars and bindings are not inherited by an [env.*] block, so each one repeats
+# them. Everything here is public: secrets (Turnstile secrets, mail keys,
+# RECIPIENTS) reach the Worker only as Worker secrets (docs/configuration.md).
+
+name = "form-handler-local"
+main = "src/index.ts"
+compatibility_date = "2026-10-26"
+workers_dev = false
+
+[observability]
+enabled = true
+
+# 5 posts a minute per form and visitor IP (docs/architecture.md, step 4).
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "1001"
+simple = { limit = 5, period = 60 }
+
+[vars]
+ENVIRONMENT = "local"
+VERSION = "local"
+# Site (repository in tl-cloud-infrastructure catalog/products.yaml) → the
+# origins its forms are posted from.
+SITES = '''
+{
+  "astragroup-website-fasadanakljuc": ["http://localhost:4321"],
+  "astragroup-website-strehanakljuc": ["http://localhost:4322"]
+}
+'''
+MAIL_ACCOUNTS = '''
+{
+  "trislab": { "provider": "log-only", "fromDomains": ["forms.trislab.com"] }
+}
+'''
+
+# ---------------------------------------------------------------- dev
+[env.dev]
+name = "form-handler-dev"
+
+[[env.dev.ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "1001"
+simple = { limit = 5, period = 60 }
+
+[env.dev.vars]
+ENVIRONMENT = "dev"
+VERSION = "dev"
+SITES = '''
+{
+  "astragroup-website-fasadanakljuc": ["https://dev.fasadanakljuc.si"],
+  "astragroup-website-strehanakljuc": ["https://dev.strehanakljuc.si"]
+}
+'''
+MAIL_ACCOUNTS = '''
+{
+  "trislab": { "provider": "acs", "endpointVar": "MAIL_ENDPOINT_TRISLAB", "secret": "MAIL_KEY_TRISLAB", "fromDomains": ["forms.trislab.com"] }
+}
+'''
+
+# ---------------------------------------------------------------- staging
+[env.staging]
+name = "form-handler-staging"
+
+[[env.staging.ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "1001"
+simple = { limit = 5, period = 60 }
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+VERSION = "staging"
+SITES = '''
+{
+  "astragroup-website-fasadanakljuc": ["https://staging.fasadanakljuc.si"],
+  "astragroup-website-strehanakljuc": ["https://staging.strehanakljuc.si"]
+}
+'''
+MAIL_ACCOUNTS = '''
+{
+  "trislab": { "provider": "acs", "endpointVar": "MAIL_ENDPOINT_TRISLAB", "secret": "MAIL_KEY_TRISLAB", "fromDomains": ["forms.trislab.com"] }
+}
+'''
+
+# ---------------------------------------------------------------- production
+[env.production]
+name = "form-handler-production"
+
+[[env.production.ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "1001"
+simple = { limit = 5, period = 60 }
+
+[env.production.vars]
+ENVIRONMENT = "production"
+VERSION = "production"
+# The bare domains join at each site's cutover (catalog/products.yaml).
+SITES = '''
+{
+  "astragroup-website-fasadanakljuc": ["https://production.fasadanakljuc.si", "https://fasadanakljuc.si", "https://www.fasadanakljuc.si"],
+  "astragroup-website-strehanakljuc": ["https://production.strehanakljuc.si", "https://strehanakljuc.si", "https://www.strehanakljuc.si"]
+}
+'''
+MAIL_ACCOUNTS = '''
+{
+  "trislab": { "provider": "acs", "endpointVar": "MAIL_ENDPOINT_TRISLAB", "secret": "MAIL_KEY_TRISLAB", "fromDomains": ["forms.trislab.com"] }
+}
+'''

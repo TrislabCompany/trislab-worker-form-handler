@@ -1,0 +1,35 @@
+{
+  "name": "trislab-worker-form-handler",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.34.9",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "dev": "wrangler dev",
+    "types": "wrangler types --include-env=false",
+    "test": "pnpm run lint && pnpm run check:types && pnpm run test:unit",
+    "lint": "eslint .",
+    "check:types": "tsc --noEmit",
+    "test:unit": "vitest run"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "1.8.1",
+    "@eslint/js": "10.0.1",
+    "eslint": "10.13.0",
+    "globals": "17.13.0",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.1",
+    "vitest": "4.1.12",
+    "wrangler": "4.152.0"
+  },
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "workerd"
+    ]
+  }
+}
