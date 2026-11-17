@@ -10,10 +10,11 @@
   "scripts": {
     "dev": "wrangler dev",
     "types": "wrangler types --include-env=false",
-    "test": "pnpm run lint && pnpm run check:types && pnpm run test:unit",
+    "test": "pnpm run lint && pnpm run check:types && pnpm run test:scripts && pnpm run test:unit",
     "lint": "eslint .",
     "check:types": "tsc --noEmit",
-    "test:unit": "vitest run"
+    "test:unit": "vitest run",
+    "test:scripts": "node --test \"scripts/*.test.mjs\""
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "1.8.1",

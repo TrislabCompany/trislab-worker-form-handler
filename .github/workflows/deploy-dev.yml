@@ -1,0 +1,48 @@
+name: Deploy to dev
+
+# Every push to main: bundles that commit and deploys it to dev. Run it by hand
+# to deploy the newest commit of main again (docs/deployment.md).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  # Nothing deploys until tl-cloud-infrastructure has created the Environment
+  # dev with its Worker, variables and token (docs/deployment.md).
+  ready:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    permissions:
+      contents: read
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    steps:
+      - name: Does the Environment dev exist?
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh api "repos/$GH_REPO/environments/dev" --silent 2>/dev/null; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipped: the Environment dev does not exist yet; tl-cloud-infrastructure creates it."
+          fi
+
+  deploy:
+    needs: ready
+    if: github.ref == 'refs/heads/main' && needs.ready.outputs.ready == 'true'
+    permissions:
+      contents: read
+      deployments: write
+    uses: ./.github/workflows/worker-deploy.yml
+    with:
+      environment: dev
+      version: ${{ github.sha }}
+      source: build
+    secrets: inherit

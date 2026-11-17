@@ -17,6 +17,8 @@ This file is the guide for every AI coding tool (Claude Code, Cursor, Codex, …
 | `wrangler.toml` | The local setup and the `dev`, `staging` and `production` Workers, with their public vars |
 | `worker-configuration.d.ts` | Runtime types from `pnpm types`; regenerate after changing `compatibility_date` or wrangler |
 | `test/` | Vitest inside workerd (`@cloudflare/vitest-plugin`), outbound `fetch` mocked |
+| `.github/workflows/` | ci, Deploy to dev, Release new version, Deploy to staging, Promote to production, all through `worker-deploy.yml` ([docs/deployment.md](docs/deployment.md)) |
+| `scripts/` | `version.mjs` (release versions, from the website template), `worker-name.mjs` (the deploy's name check) |
 
 ## Rules
 
@@ -31,4 +33,8 @@ This file is the guide for every AI coding tool (Claude Code, Cursor, Codex, …
 
 ## Skills
 
-None yet. The `release` skill comes with the deploy workflows ([docs/deployment.md](docs/deployment.md)).
+Skills live in `.agents/skills/<name>/SKILL.md`; each has a pointer with the same front matter in `.claude/skills/<name>/SKILL.md`, so that Claude Code lists it.
+
+| Skill | Use when |
+| --- | --- |
+| [`release`](.agents/skills/release/SKILL.md) | Deploying, releasing a new version, promoting to production, or asking which version runs where |
