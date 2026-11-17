@@ -1,0 +1,182 @@
+name: worker-deploy
+
+# Deploys one version of the Worker to one Environment, and records it as a
+# GitHub deployment of that Environment. Called by deploy-dev.yml,
+# deploy-staging.yml and promote.yml (docs/deployment.md).
+#
+# - source build:   bundles the commit `version` (dev).
+# - source release: uploads the worker-<version>.zip of the GitHub Release of
+#                   the tag `version`, bundled once by release.yml, so staging
+#                   and production run the same code.
+#
+# The Environment holds, from tl-cloud-infrastructure, the variables
+# CLOUDFLARE_ACCOUNT_ID, WORKER_NAME and WORKER_URL, the secret
+# CLOUDFLARE_API_TOKEN and the secrets TURNSTILE_SECRET_<SITE>; and, set by
+# hand, the secrets MAIL_KEY_<ACCOUNT> and RECIPIENTS (docs/configuration.md).
+# Those secrets go up with the version (--secrets-file), so a deploy always
+# carries what the Environment holds. Then GET /healthz must answer 200, or the
+# deploy fails.
+#
+# The deployment is created with task deploy:worker. Promotion reads it back to
+# find the version staging runs.
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: dev, staging or production
+        type: string
+        required: true
+      version:
+        description: The commit (source build) or the tag vX.Y.Z (source release)
+        type: string
+        required: true
+      source:
+        description: build or release
+        type: string
+        required: true
+
+permissions: {}
+
+jobs:
+  deploy:
+    name: deploy ${{ inputs.version }} to ${{ inputs.environment }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ vars.WORKER_URL }}
+    concurrency:
+      group: worker-${{ inputs.environment }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      deployments: write
+    env:
+      ENVIRONMENT: ${{ inputs.environment }}
+      VERSION: ${{ inputs.version }}
+      SOURCE: ${{ inputs.source }}
+      WORKER_NAME: ${{ vars.WORKER_NAME }}
+      WORKER_URL: ${{ vars.WORKER_URL }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Check the inputs
+        run: |
+          case "$ENVIRONMENT" in dev|staging|production) ;; *) echo "::error::unknown environment $ENVIRONMENT"; exit 1;; esac
+          case "$SOURCE" in
+            build) [[ $VERSION =~ ^[0-9a-f]{40}$ ]] || { echo "::error::source build needs a full commit SHA, not $VERSION"; exit 1; } ;;
+            release) [[ $VERSION =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || { echo "::error::source release needs a tag vX.Y.Z, not $VERSION"; exit 1; } ;;
+            *) echo "::error::unknown source $SOURCE"; exit 1 ;;
+          esac
+          for name in CLOUDFLARE_ACCOUNT_ID WORKER_NAME WORKER_URL; do
+            [ -n "${!name}" ] || { echo "::error::the Environment $ENVIRONMENT has no variable $name; tl-cloud-infrastructure sets it (docs/deployment.md)"; exit 1; }
+          done
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.version }}
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+
+      # The name infra gave the Worker must be the one wrangler.toml names, or
+      # the deploy would create a second Worker that no hostname routes to.
+      - name: Check the Worker's name
+        run: |
+          configured=$(node scripts/worker-name.mjs "$ENVIRONMENT")
+          if [ "$configured" != "$WORKER_NAME" ]; then
+            echo "::error::wrangler.toml names the $ENVIRONMENT Worker '$configured', but the Environment's WORKER_NAME is '$WORKER_NAME'"; exit 1
+          fi
+
+      - name: Bundle the commit
+        if: inputs.source == 'build'
+        run: pnpm exec wrangler deploy --dry-run --outdir dist --env "$ENVIRONMENT"
+        env:
+          WRANGLER_SEND_METRICS: false
+
+      - name: Download the release
+        if: inputs.source == 'release'
+        run: |
+          rm -rf dist
+          if ! gh release download "$VERSION" --pattern "worker-$VERSION.zip" --dir "$RUNNER_TEMP"; then
+            echo "::error::the GitHub Release $VERSION has no worker-$VERSION.zip; only releases made by Release new version can be deployed"
+            exit 1
+          fi
+          unzip -q "$RUNNER_TEMP/worker-$VERSION.zip" -d dist
+
+      # Only the Worker's own secrets, never CLOUDFLARE_API_TOKEN or the GitHub token.
+      - name: Collect the Worker's secrets and settings
+        run: |
+          umask 077
+          jq 'with_entries(select(.key | test("^(TURNSTILE_SECRET_[A-Z0-9_]+|MAIL_KEY_[A-Z0-9_]+|RECIPIENTS|AZURE_LOGS_CLIENT_SECRET|TARGET_[A-Z0-9_]+_SECRET)$")))' \
+            <<< "$SECRETS_JSON" > "$RUNNER_TEMP/secrets.json"
+          echo "Secrets: $(jq -r 'keys | join(", ")' "$RUNNER_TEMP/secrets.json")"
+          jq -r 'to_entries[] | select(.key | test("^(AZURE_TENANT_ID|AZURE_LOGS_CLIENT_ID|AZURE_LOGS_DCE|AZURE_LOGS_DCR_ID|TARGET_[A-Z0-9_]+_URL)$")) | "\(.key):\(.value)"' \
+            <<< "$VARS_JSON" > "$RUNNER_TEMP/vars.txt"
+          echo "VERSION:$VERSION" >> "$RUNNER_TEMP/vars.txt"
+          echo "Settings: $(cut -d: -f1 "$RUNNER_TEMP/vars.txt" | paste -sd, -)"
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+          VARS_JSON: ${{ toJSON(vars) }}
+
+      - name: Record the deployment
+        id: record
+        run: |
+          production=$([ "$ENVIRONMENT" = production ] && echo true || echo false)
+          id=$(jq -n --arg ref "$VERSION" --arg env "$ENVIRONMENT" --argjson prod "$production" '{
+              ref: $ref, environment: $env, task: "deploy:worker", auto_merge: false,
+              required_contexts: [], production_environment: $prod, transient_environment: false,
+              description: "Cloudflare Workers"
+            }' | gh api --method POST "repos/$GH_REPO/deployments" --input - --jq .id)
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+          gh api --method POST "repos/$GH_REPO/deployments/$id/statuses" -f state=in_progress --silent
+
+      - name: Deploy to Cloudflare Workers
+        run: |
+          args=()
+          while IFS= read -r v; do [ -n "$v" ] && args+=(--var "$v"); done < "$RUNNER_TEMP/vars.txt"
+          pnpm exec wrangler deploy dist/index.js --no-bundle \
+            --env "$ENVIRONMENT" --name "$WORKER_NAME" \
+            --secrets-file "$RUNNER_TEMP/secrets.json" \
+            --message "$VERSION" \
+            "${args[@]}"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: false
+
+      - name: Forget the secrets
+        if: always()
+        run: rm -f "$RUNNER_TEMP/secrets.json"
+
+      # /healthz answers 503 while a secret or setting is missing (docs/configuration.md).
+      - name: Check /healthz
+        run: |
+          for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            status=$(curl -s -o "$RUNNER_TEMP/health.json" -w '%{http_code}' --max-time 10 "$WORKER_URL/healthz" || true)
+            if [ "$status" = 200 ] && jq -e --arg v "$VERSION" '.ok == true and .version == $v' "$RUNNER_TEMP/health.json" >/dev/null; then
+              echo "healthy: $(cat "$RUNNER_TEMP/health.json")"; exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::$WORKER_URL/healthz answered $status: $(cat "$RUNNER_TEMP/health.json" 2>/dev/null). The Worker logs list the issues (config.invalid); roll back in the Cloudflare dashboard if needed (docs/deployment.md#roll-back)"
+          exit 1
+
+      - name: Mark the deployment successful
+        run: |
+          gh api --method POST "repos/$GH_REPO/deployments/${{ steps.record.outputs.id }}/statuses" \
+            -f state=success -f environment_url="$WORKER_URL" -f log_url="$RUN_URL" --silent
+          echo "Deployed **$VERSION** to **$ENVIRONMENT** ($WORKER_URL)" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Mark the deployment failed
+        if: failure() && steps.record.outputs.id != ''
+        run: |
+          gh api --method POST "repos/$GH_REPO/deployments/${{ steps.record.outputs.id }}/statuses" \
+            -f state=failure -f log_url="$RUN_URL" --silent
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

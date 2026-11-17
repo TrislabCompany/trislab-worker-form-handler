@@ -18,11 +18,11 @@ export default defineConfig([
     },
   },
   {
-    files: ["src/log.ts"],
+    files: ["src/log.ts", "scripts/**/*.mjs"],
     rules: { "no-console": "off" },
   },
   {
-    files: ["*.config.{js,ts}"],
+    files: ["*.config.{js,ts}", "scripts/**/*.mjs"],
     languageOptions: { globals: { ...globals.node } },
   },
 ]);
