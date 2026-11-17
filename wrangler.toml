@@ -6,7 +6,7 @@
 # them. Everything here is public: secrets (Turnstile secrets, mail keys,
 # RECIPIENTS) reach the Worker only as Worker secrets (docs/configuration.md).
 
-name = "form-handler-local"
+name = "local-form-handler-trislab"
 main = "src/index.ts"
 compatibility_date = "2026-10-26"
 workers_dev = false
@@ -39,7 +39,7 @@ MAIL_ACCOUNTS = '''
 
 # ---------------------------------------------------------------- dev
 [env.dev]
-name = "form-handler-dev"
+name = "dev-form-handler-trislab"
 
 [[env.dev.ratelimits]]
 name = "RATE_LIMITER"
@@ -63,7 +63,7 @@ MAIL_ACCOUNTS = '''
 
 # ---------------------------------------------------------------- staging
 [env.staging]
-name = "form-handler-staging"
+name = "staging-form-handler-trislab"
 
 [[env.staging.ratelimits]]
 name = "RATE_LIMITER"
@@ -87,7 +87,7 @@ MAIL_ACCOUNTS = '''
 
 # ---------------------------------------------------------------- production
 [env.production]
-name = "form-handler-production"
+name = "production-form-handler-trislab"
 
 [[env.production.ratelimits]]
 name = "RATE_LIMITER"

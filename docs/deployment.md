@@ -2,11 +2,11 @@
 
 | Environment | Worker | Address | Sites |
 | --- | --- | --- | --- |
-| dev | `form-handler-dev` | `forms-dev.trislab.com` | `dev.<site>` |
-| staging | `form-handler-staging` | `forms-staging.trislab.com` | `staging.<site>` |
-| production | `form-handler-production` | `forms.trislab.com` | `production.<site>`, and the site's own domain from its cutover |
+| dev | `dev-form-handler-trislab` | `forms-dev.trislab.com` | `dev.<site>` |
+| staging | `staging-form-handler-trislab` | `forms-staging.trislab.com` | `staging.<site>` |
+| production | `production-form-handler-trislab` | `forms.trislab.com` | `production.<site>`, and the site's own domain from its cutover |
 
-The hostnames and routes, the GitHub Environments, the deploy token and the Turnstile secrets come from `tl-cloud-infrastructure`. They do not exist yet.
+`tl-cloud-infrastructure` creates the Workers (named `<environment>-<product>-<tenant>`, the `name` of each environment in `wrangler.toml`), their hostnames as Workers Custom Domains, the GitHub Environments with `CLOUDFLARE_ACCOUNT_ID`, `WORKER_NAME`, `WORKER_URL`, the deploy token `CLOUDFLARE_API_TOKEN` and the `TURNSTILE_SECRET_<SITE>` secrets (tl-cloud-infrastructure #144 and the PR after it). A name that differs from `WORKER_NAME` would deploy a second, unrouted Worker, so the deploy workflow checks that they match.
 
 ## Still to come
 
