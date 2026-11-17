@@ -1,0 +1,32 @@
+name: checks
+
+# The steps of the check `ci / ci`, called by ci.yml: `pnpm test` (lint, types,
+# the script tests, the tests inside workerd and the config check of every
+# environment) and the check that the runtime types are up to date. They are
+# in this reusable workflow so the check keeps the name `ci / ci` that the
+# ruleset of main requires (tl-cloud-infrastructure global/github).
+
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  ci:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+
+      - name: Runtime types are up to date
+        run: |
+          pnpm types
+          git diff --exit-code -- worker-configuration.d.ts || { echo "::error::Run pnpm types and commit worker-configuration.d.ts"; exit 1; }
+
+      - run: pnpm test
