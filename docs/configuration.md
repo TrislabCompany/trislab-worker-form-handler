@@ -10,8 +10,7 @@ Everything public is in git; everything secret or personal is a Worker secret. T
 | `MAIL_ACCOUNTS` | No | `wrangler.toml` | this repo | JSON: account → `provider`, `fromDomains`, and the *names* of its `secret` and `endpointVar` |
 | `RECIPIENTS` | **Yes, personal data** | GitHub Environment secret | devops, by hand (`gh secret set RECIPIENTS --env <env>`) | JSON: form ID → addresses (at most 50). Dev and staging point at a Trislab test inbox |
 | `TURNSTILE_SECRET_<SITE>` | Yes | GitHub Environment secret | tl-cloud-infrastructure, from `turnstile_secrets` | One per site, for example `TURNSTILE_SECRET_ASTRAGROUP_WEBSITE_FASADANAKLJUC` |
-| `MAIL_ENDPOINT_TRISLAB` | No | GitHub Environment variable | tl-cloud-infrastructure | The ACS resource endpoint, `https://<name>.<region>.communication.azure.com` |
-| `MAIL_KEY_TRISLAB` | Yes | GitHub Environment secret | tl-cloud-infrastructure | The ACS access key |
+| `MAIL_KEY_TRISLAB` | Yes | GitHub Environment secret | devops, by hand | A Resend API key with sending access only, limited to `forms.trislab.com`, one per environment |
 | `AZURE_TENANT_ID`, `AZURE_LOGS_CLIENT_ID`, `AZURE_LOGS_DCE`, `AZURE_LOGS_DCR_ID` | No | GitHub Environment variables | tl-cloud-infrastructure | Log Analytics shipping ([logging.md](logging.md)) |
 | `AZURE_LOGS_CLIENT_SECRET` | Yes | GitHub Environment secret | tl-cloud-infrastructure | Same |
 | `RATE_LIMITER` | — | `wrangler.toml` binding | this repo | 5 posts a minute per form and IP |

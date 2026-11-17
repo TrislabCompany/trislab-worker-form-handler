@@ -12,7 +12,7 @@ This file is the guide for every AI coding tool (Claude Code, Cursor, Codex, …
 | `src/forms.ts` | The form registry: every form's fields, subject, sender, pages and actions ([docs/adding-a-form.md](docs/adding-a-form.md)) |
 | `src/config.ts` | Reads `SITES`, `MAIL_ACCOUNTS`, `RECIPIENTS` and the secrets, and checks them ([docs/configuration.md](docs/configuration.md)) |
 | `src/actions/` | What a submission does, all at once: `email` now, `http` (external systems) later |
-| `src/mail/` | The mail providers behind one contract: `acs` (Azure Communication Services Email), `log-only` ([docs/mail-providers.md](docs/mail-providers.md)) |
+| `src/mail/` | The mail providers behind one contract: `resend`, `log-only` ([docs/mail-providers.md](docs/mail-providers.md)) |
 | `src/log.ts`, `src/azure-logs.ts` | Structured logs to Workers Logs and Azure Log Analytics ([docs/logging.md](docs/logging.md)) |
 | `wrangler.toml` | The local setup and the `dev`, `staging` and `production` Workers, with their public vars |
 | `worker-configuration.d.ts` | Runtime types from `pnpm types`; regenerate after changing `compatibility_date` or wrangler |

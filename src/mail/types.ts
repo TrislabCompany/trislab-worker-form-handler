@@ -10,10 +10,8 @@ export interface Mail {
   subject: string;
   text: string;
   html: string;
-  /** A UUID per submission: a provider that supports it sends a repeated request once. */
+  /** A UUID per submission: the provider sends a repeated request with it once. */
   idempotencyKey: string;
-  /** When the first attempt was made; repeated with the key on a retry. */
-  firstSentAt: Date;
 }
 
 export type SendResult =

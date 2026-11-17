@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { loadConfig } from "../src/config";
 import { forms } from "../src/forms";
 import type { FormConfig } from "../src/types";
-import { ACS_ACCOUNTS, testEnv } from "./helpers";
+import { RESEND_ACCOUNTS, testEnv } from "./helpers";
 
 const fasada = forms["fasadanakljuc-povprasevanje"]!;
 const one = (form: Partial<FormConfig>) => ({ "fasadanakljuc-povprasevanje": { ...fasada, ...form } });
@@ -30,7 +30,7 @@ describe("the config check", () => {
   });
 
   it("finds missing secrets and recipients at runtime only", () => {
-    const env = testEnv({ MAIL_ACCOUNTS: ACS_ACCOUNTS, MAIL_KEY_TRISLAB: undefined, TURNSTILE_SECRET_ASTRAGROUP_WEBSITE_FASADANAKLJUC: undefined, RECIPIENTS: JSON.stringify({}) });
+    const env = testEnv({ MAIL_ACCOUNTS: RESEND_ACCOUNTS, MAIL_KEY_TRISLAB: undefined, TURNSTILE_SECRET_ASTRAGROUP_WEBSITE_FASADANAKLJUC: undefined, RECIPIENTS: JSON.stringify({}) });
     expect(loadConfig(env, forms, "static").issues).toEqual([]);
     const { issues } = loadConfig(env, forms, "runtime");
     expect(issues).toContain("MAIL_ACCOUNTS.trislab: MAIL_KEY_TRISLAB is not set");

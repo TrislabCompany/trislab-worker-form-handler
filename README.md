@@ -5,7 +5,7 @@ Trislab's shared form handler: a Cloudflare Worker that receives the forms of Tr
 1. checks that the post comes from one of the form's sites;
 2. checks the Turnstile token with the site's secret;
 3. checks the fields against the form's rules;
-4. sends the submission by e-mail through the form's mail account (Azure Communication Services Email);
+4. sends the submission by e-mail through the form's mail account (Resend);
 5. sends the visitor back to the site's thank-you page, or to its error page.
 
 It stores nothing. The logs hold no personal data.
@@ -42,6 +42,6 @@ curl -i -X POST localhost:8787/f/fasadanakljuc-povprasevanje \
 | [architecture.md](docs/architecture.md) | The pipeline, the actions, what the visitor sees |
 | [configuration.md](docs/configuration.md) | Every var and secret, where it lives and who sets it |
 | [adding-a-form.md](docs/adding-a-form.md) | A new site or form, step by step |
-| [mail-providers.md](docs/mail-providers.md) | The provider contract, ACS, adding a provider |
+| [mail-providers.md](docs/mail-providers.md) | The provider contract, Resend, adding a provider |
 | [logging.md](docs/logging.md) | The events, Workers Logs and Log Analytics |
 | [deployment.md](docs/deployment.md) | Environments and the deploy workflows |

@@ -57,7 +57,7 @@ SITES = '''
 '''
 MAIL_ACCOUNTS = '''
 {
-  "trislab": { "provider": "acs", "endpointVar": "MAIL_ENDPOINT_TRISLAB", "secret": "MAIL_KEY_TRISLAB", "fromDomains": ["forms.trislab.com"] }
+  "trislab": { "provider": "resend", "secret": "MAIL_KEY_TRISLAB", "fromDomains": ["forms.trislab.com"] }
 }
 '''
 
@@ -81,7 +81,7 @@ SITES = '''
 '''
 MAIL_ACCOUNTS = '''
 {
-  "trislab": { "provider": "acs", "endpointVar": "MAIL_ENDPOINT_TRISLAB", "secret": "MAIL_KEY_TRISLAB", "fromDomains": ["forms.trislab.com"] }
+  "trislab": { "provider": "resend", "secret": "MAIL_KEY_TRISLAB", "fromDomains": ["forms.trislab.com"] }
 }
 '''
 
@@ -106,6 +106,6 @@ SITES = '''
 '''
 MAIL_ACCOUNTS = '''
 {
-  "trislab": { "provider": "acs", "endpointVar": "MAIL_ENDPOINT_TRISLAB", "secret": "MAIL_KEY_TRISLAB", "fromDomains": ["forms.trislab.com"] }
+  "trislab": { "provider": "resend", "secret": "MAIL_KEY_TRISLAB", "fromDomains": ["forms.trislab.com"] }
 }
 '''

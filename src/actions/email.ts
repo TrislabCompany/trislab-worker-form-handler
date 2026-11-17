@@ -21,7 +21,6 @@ export function emailAction(config: Extract<ActionConfig, { type: "email" }>): A
           text,
           html,
           idempotencyKey: ctx.submissionId,
-          firstSentAt: ctx.receivedAt,
         },
         { account: config.account, fallback: config.fallback },
         ctx.config,

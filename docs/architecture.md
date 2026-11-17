@@ -19,7 +19,7 @@ A site's form is a plain HTML form post (no JavaScript needed) to `POST /f/<form
 
 From step 3 on, every answer is a 303 to a page on the posting origin, so a person always lands on the site. The error page tells the visitor that sending failed and how else to reach the company.
 
-The submission ID is a UUID derived from the Turnstile token. A double submit of the same page gets the same ID. Turnstile's idempotency key then gives the same answer, and ACS sends the mail once (`repeatability-request-id`).
+The submission ID is a UUID derived from the Turnstile token. A double submit of the same page gets the same ID. Turnstile's idempotency key then gives the same answer, and Resend sends the mail once (`Idempotency-Key`).
 
 ## Actions (`src/actions/`)
 
