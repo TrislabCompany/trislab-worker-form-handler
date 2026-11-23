@@ -45,3 +45,7 @@ curl -i -X POST localhost:8787/f/fasadanakljuc-povprasevanje \
 | [mail-providers.md](docs/mail-providers.md) | The provider contract, Resend, adding a provider |
 | [logging.md](docs/logging.md) | The events, Workers Logs and Log Analytics |
 | [deployment.md](docs/deployment.md) | Environments and the deploy workflows |
+
+## Licence
+
+Proprietary: [LICENSE](LICENSE). The code is public to read, but it belongs to Trislab d.o.o., and only Trislab, and the clients of the applications Trislab delivers under a written agreement, may use it. Cloning or forking it for use, copying, redistribution and training AI models on it are not allowed. Material of others, such as the dependencies and a client's texts, logos and photos, keeps its owner's rights and its own licence.
